@@ -33,7 +33,7 @@ public class CommentaireRestController {
     }
 
 
-    @DeleteMapping("/article/{id}")
+    @DeleteMapping("/commentaire/{id}")
     public void supprimerParId(@PathVariable("id") Long id) {
         this.commentaireService.deleteById(id);
     }
