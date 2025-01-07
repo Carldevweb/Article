@@ -1,5 +1,6 @@
 package com.CarlDevWeb.Blog.rest.controller;
 
+import com.CarlDevWeb.Blog.dto.CommentaireDto;
 import com.CarlDevWeb.Blog.model.Commentaire;
 import com.CarlDevWeb.Blog.service.CommentaireService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +17,8 @@ public class CommentaireRestController {
     private CommentaireService commentaireService;
 
     @PostMapping("/commentaire")
-    public ResponseEntity<Commentaire> save(@RequestBody Commentaire commentaire) {
-        Commentaire sauvegardeCommentaire = commentaireService.save(commentaire);
+    public ResponseEntity<CommentaireDto> save(@RequestBody CommentaireDto commentaireDto) {
+        CommentaireDto sauvegardeCommentaire = commentaireService.enrgistrerCommentaire(commentaireDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(sauvegardeCommentaire);
     }
 
@@ -35,6 +36,6 @@ public class CommentaireRestController {
 
     @DeleteMapping("/commentaire/{id}")
     public void supprimerParId(@PathVariable("id") Long id) {
-        this.commentaireService.deleteById(id);
+        this.commentaireService.supprimerParId(id);
     }
 }

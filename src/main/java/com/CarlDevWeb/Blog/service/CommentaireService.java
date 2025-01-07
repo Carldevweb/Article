@@ -1,7 +1,9 @@
 package com.CarlDevWeb.Blog.service;
 
-import com.CarlDevWeb.Blog.repository.CommentaireRepository;
+import com.CarlDevWeb.Blog.dto.CommentaireDto;
+import com.CarlDevWeb.Blog.mapper.CommentaireMapper;
 import com.CarlDevWeb.Blog.model.Commentaire;
+import com.CarlDevWeb.Blog.repository.CommentaireRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,13 +18,19 @@ public class CommentaireService {
     @Autowired
     CommentaireRepository commentaireRepository;
 
+    @Autowired
+    CommentaireMapper commentaireMapper;
+
     @Transactional
-    public Commentaire save(Commentaire commentaire) {
-        commentaire.setDateCreation(LocalDateTime.now());
-        return commentaireRepository.save(commentaire);
+    public CommentaireDto enrgistrerCommentaire(CommentaireDto commentaireDto) {
+        Commentaire commentaire = commentaireMapper.toEntity(commentaireDto);
+        commentaireDto.setDateCreation(LocalDateTime.now());
+        Commentaire sauvegarderCommentaire = commentaireRepository.save(commentaire);
+
+        return commentaireMapper.toDto(sauvegarderCommentaire);
     }
 
-    public void deleteById(Long id){
+    public void supprimerParId(Long id){
         this.commentaireRepository.deleteById(id);
     }
 
