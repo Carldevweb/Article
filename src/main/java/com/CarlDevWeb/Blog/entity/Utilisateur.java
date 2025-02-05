@@ -1,7 +1,11 @@
 package com.CarlDevWeb.Blog.entity;
 
 import com.CarlDevWeb.Blog.enumerate.Role;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "utilisateur")
@@ -15,7 +19,17 @@ public class Utilisateur {
     private String motDePasse;
     private String email;
 
-    private Role roles;
+    @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Favori> favori = new ArrayList<>();
+
+    public List<Favori> getFavori() {
+        return favori;
+    }
+
+    public void setFavori(List<Favori> favori) {
+        this.favori = favori;
+    }
 
     public Long getId() {
         return id;

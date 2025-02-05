@@ -25,6 +25,22 @@ public class Article {
     @JsonManagedReference
     private List<Commentaire> commentaires = new ArrayList<>();
 
+    @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Favori> favori = new ArrayList<>();
+
+    public List<Favori> getFavori() {
+        return favori;
+    }
+
+    public void setFavori(List<Favori> favori) {
+        this.favori = favori;
+    }
+
+    public int getFavoriNb() {
+        return favori.size();
+    }
+
     public List<Commentaire> getCommentaires() {
         return commentaires;
     }
@@ -38,7 +54,7 @@ public class Article {
         commentaire.setArticle(this);
     }
 
-    public void retirerCommentaire(Commentaire commentaire){
+    public void retirerCommentaire(Commentaire commentaire) {
         commentaires.remove(commentaire);
         commentaire.setArticle(this);
     }
