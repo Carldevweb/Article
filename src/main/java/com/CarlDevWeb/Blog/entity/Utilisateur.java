@@ -1,19 +1,17 @@
-package com.CarlDevWeb.Blog.model;
+package com.CarlDevWeb.Blog.entity;
 
 import com.CarlDevWeb.Blog.enumerate.Role;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
-public class Personne {
+@Table(name = "utilisateur")
+public class Utilisateur {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private String nomPersonne;
-    private String prenomPersonne;
+    private String nomUtilisateur;
+    private String prenomUtilisateur;
     private String motDePasse;
     private String email;
 
@@ -27,20 +25,20 @@ public class Personne {
         this.id = id;
     }
 
-    public String getNomPersonne() {
-        return nomPersonne;
+    public String getNomUtilisateur() {
+        return nomUtilisateur;
     }
 
-    public void setNomPersonne(String nomPersonne) {
-        this.nomPersonne = nomPersonne;
+    public void setNomUtilisateur(String nomUtilisateur) {
+        this.nomUtilisateur = nomUtilisateur;
     }
 
-    public String getPrenomPersonne() {
-        return prenomPersonne;
+    public String getPrenomUtilisateur() {
+        return prenomUtilisateur;
     }
 
-    public void setPrenomPersonne(String prenomPersonne) {
-        this.prenomPersonne = prenomPersonne;
+    public void setPrenomUtilisateur(String prenomUtilisateur) {
+        this.prenomUtilisateur = prenomUtilisateur;
     }
 
     public Role getRoles() {
@@ -77,9 +75,10 @@ public class Personne {
 
     @Override
     public String toString() {
-        return "Personne{" +
+        return "Utilisateur{" +
                 "id=" + id +
-                ", nomPersonne='" + nomPersonne + '\'' +
+                ", nomUtilisateur='" + nomUtilisateur + '\'' +
+                ", prenomUtilisateur='" + prenomUtilisateur + '\'' +
                 ", motDePasse='" + motDePasse + '\'' +
                 ", email='" + email + '\'' +
                 ", roles=" + roles +

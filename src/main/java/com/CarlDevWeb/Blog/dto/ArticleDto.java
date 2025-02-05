@@ -5,13 +5,15 @@ import java.util.Date;
 
 public class ArticleDto {
 
+    private Long id;
     private String titre;
     private String contenu;
     private String auteur;
     private LocalDateTime dateCreation;
     private Date miseAJour;
 
-    public ArticleDto(String titre, String contenu, String auteur, LocalDateTime dateCreation, Date miseAJour) {
+    public ArticleDto(Long id, String titre, String contenu, String auteur, LocalDateTime dateCreation, Date miseAJour) {
+        this.id = id;
         this.titre = titre;
         this.contenu = contenu;
         this.auteur = auteur;
@@ -20,6 +22,14 @@ public class ArticleDto {
     }
 
     public ArticleDto() {
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getTitre() {
@@ -60,5 +70,17 @@ public class ArticleDto {
 
     public void setMiseAJour(Date miseAJour) {
         this.miseAJour = miseAJour;
+    }
+
+    @Override
+    public String toString() {
+        return "ArticleDto{" +
+                "id=" + id +
+                ", titre='" + titre + '\'' +
+                ", contenu='" + contenu + '\'' +
+                ", auteur='" + auteur + '\'' +
+                ", dateCreation=" + dateCreation +
+                ", miseAJour=" + miseAJour +
+                '}';
     }
 }

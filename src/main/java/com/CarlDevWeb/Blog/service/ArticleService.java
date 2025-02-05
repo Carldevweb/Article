@@ -1,14 +1,15 @@
 package com.CarlDevWeb.Blog.service;
 
 import com.CarlDevWeb.Blog.dto.ArticleDto;
+import com.CarlDevWeb.Blog.entity.Article;
 import com.CarlDevWeb.Blog.mapper.ArticleMapper;
 import com.CarlDevWeb.Blog.repository.ArticleRepository;
-import com.CarlDevWeb.Blog.model.Article;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class ArticleService {
@@ -43,14 +44,22 @@ public class ArticleService {
         return articleMapper.toDto(articleMisAJour);
     }
 
+    public Optional<Article> findById(Long id) {
+        return articleRepository.findById(id);
+
+    }
+
     public void deleteById(Long id) {
         this.articleRepository.deleteById(id);
     }
 
-    public Article findByTitreContainingIgnoreCase(String titre) {
+    public Optional<ArticleDto> findByTitreContainingIgnoreCase(String titre) {
         if (titre == null || titre.trim().isEmpty()) {
             System.out.println("Le titre n'existe pas");
         }
-        return (Article) articleRepository.findByTitreContainingIgnoreCase(titre);
+        return articleRepository.findByTitreContainingIgnoreCase(titre)
+                .stream()
+                .findFirst()
+                .map(articleMapper::toDto);
     }
 }

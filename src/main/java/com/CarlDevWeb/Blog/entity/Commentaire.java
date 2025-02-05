@@ -1,10 +1,12 @@
-package com.CarlDevWeb.Blog.model;
+package com.CarlDevWeb.Blog.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "commentaire")
 public class Commentaire {
 
     @Id
@@ -16,6 +18,7 @@ public class Commentaire {
 
     @ManyToOne
     @JoinColumn(name = "article_id", nullable = false)
+    @JsonBackReference
     private Article article;
 
     public Long getId() {

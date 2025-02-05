@@ -1,5 +1,6 @@
-package com.CarlDevWeb.Blog.model;
+package com.CarlDevWeb.Blog.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -21,6 +22,7 @@ public class Article {
     private Date miseAJour;
 
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<Commentaire> commentaires = new ArrayList<>();
 
     public List<Commentaire> getCommentaires() {
@@ -87,5 +89,18 @@ public class Article {
 
     public void setTitre(String titre) {
         this.titre = titre;
+    }
+
+    @Override
+    public String toString() {
+        return "Article{" +
+                "id=" + id +
+                ", titre='" + titre + '\'' +
+                ", contenu='" + contenu + '\'' +
+                ", auteur='" + auteur + '\'' +
+                ", dateCreation=" + dateCreation +
+                ", miseAJour=" + miseAJour +
+                ", commentaires=" + commentaires +
+                '}';
     }
 }

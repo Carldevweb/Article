@@ -1,7 +1,7 @@
 package com.CarlDevWeb.Blog.mapper;
 
 import com.CarlDevWeb.Blog.dto.ArticleDto;
-import com.CarlDevWeb.Blog.model.Article;
+import com.CarlDevWeb.Blog.entity.Article;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -12,9 +12,10 @@ public class ArticleMapper {
         }
 
         ArticleDto articleDto = new ArticleDto();
+        articleDto.setId(article.getId());
         articleDto.setTitre(article.getTitre());
         articleDto.setContenu(article.getContenu());
-        articleDto.setAuteur(articleDto.getAuteur());
+        articleDto.setAuteur(article.getAuteur());
         articleDto.setDateCreation(article.getDateCreation());
         articleDto.setMiseAJour(article.getMiseAJour());
 
@@ -26,11 +27,12 @@ public class ArticleMapper {
             return null;
         }
         Article articleEntity = new Article();
+        articleEntity.setId(articleDto.getId());
         articleEntity.setTitre(articleDto.getTitre());
         articleEntity.setContenu(articleDto.getContenu());
-        articleEntity.setAuteur(articleEntity.getAuteur());
-        articleEntity.setDateCreation(articleEntity.getDateCreation());
-        articleEntity.setMiseAJour(articleEntity.getMiseAJour());
+        articleEntity.setAuteur(articleDto.getAuteur());
+        articleEntity.setDateCreation(articleDto.getDateCreation());
+        articleEntity.setMiseAJour(articleDto.getMiseAJour());
 
         return articleEntity;
     }
