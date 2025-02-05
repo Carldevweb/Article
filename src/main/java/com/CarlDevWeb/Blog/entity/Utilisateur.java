@@ -79,14 +79,6 @@ public class Utilisateur {
         this.email = email;
     }
 
-    public Role getRole() {
-        return roles;
-    }
-
-    public void setRole(Role roles) {
-        this.roles = roles;
-    }
-
     @Override
     public String toString() {
         return "Utilisateur{" +
@@ -95,7 +87,7 @@ public class Utilisateur {
                 ", prenomUtilisateur='" + prenomUtilisateur + '\'' +
                 ", motDePasse='" + motDePasse + '\'' +
                 ", email='" + email + '\'' +
-                ", roles=" + roles +
+                ", favori=" + favori +
                 '}';
     }
 }
