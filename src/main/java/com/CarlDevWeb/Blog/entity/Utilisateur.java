@@ -1,6 +1,5 @@
 package com.CarlDevWeb.Blog.entity;
 
-import com.CarlDevWeb.Blog.enumerate.Role;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
@@ -53,14 +52,6 @@ public class Utilisateur {
 
     public void setPrenomUtilisateur(String prenomUtilisateur) {
         this.prenomUtilisateur = prenomUtilisateur;
-    }
-
-    public Role getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Role roles) {
-        this.roles = roles;
     }
 
     public String getMotDePasse() {
