@@ -30,7 +30,6 @@ public class ArticleRestController {
     @GetMapping("id/{id}")
     public Optional<Article> findById(@RequestBody Long id) {
         return articleService.findById(id);
-
     }
 
     @GetMapping("titre/{titre}")
@@ -43,7 +42,6 @@ public class ArticleRestController {
 
         return articleDto.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-
     }
 
     @PutMapping("/{id}")
@@ -60,13 +58,10 @@ public class ArticleRestController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-
     }
 
     @DeleteMapping("/{id}")
     public void supprimerParId(@PathVariable("id") Long id) {
         this.articleService.deleteById(id);
     }
-
-
 }

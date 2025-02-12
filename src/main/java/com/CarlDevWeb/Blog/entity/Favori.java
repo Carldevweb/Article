@@ -1,6 +1,6 @@
 package com.CarlDevWeb.Blog.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -15,12 +15,11 @@ public class Favori {
 
     @ManyToOne
     @JoinColumn(name = "utilisateur_id", nullable = false)
-    @JsonBackReference
     private Utilisateur utilisateur;
 
     @ManyToOne
     @JoinColumn(name = "article_id", nullable = false)
-    @JsonBackReference
+    @JsonIgnore
     private Article article;
 
     private LocalDateTime dateDeCreation;

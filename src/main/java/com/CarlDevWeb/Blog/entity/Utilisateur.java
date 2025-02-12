@@ -1,6 +1,6 @@
 package com.CarlDevWeb.Blog.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ public class Utilisateur {
     private String email;
 
     @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @JsonIgnoreProperties("utilisateur")
     private List<Favori> favori = new ArrayList<>();
 
     public List<Favori> getFavori() {
