@@ -7,7 +7,6 @@ public class UtilisateurDto {
     private String prenomUtilisateur;
     private String email;
 
-
     public UtilisateurDto(String nomUtilisateur, String prenomUtilisateur, String email) {
         this.nomUtilisateur = nomUtilisateur;
         this.prenomUtilisateur = prenomUtilisateur;
