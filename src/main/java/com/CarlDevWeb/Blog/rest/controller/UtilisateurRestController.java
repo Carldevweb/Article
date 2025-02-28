@@ -3,6 +3,7 @@ package com.CarlDevWeb.Blog.rest.controller;
 import com.CarlDevWeb.Blog.dto.UtilisateurDto;
 import com.CarlDevWeb.Blog.mapper.UtilisateurMapper;
 import com.CarlDevWeb.Blog.service.UtilisateurService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class UtilisateurRestController {
     private UtilisateurMapper utilisateurMapper;
 
     @PostMapping
-    public ResponseEntity<UtilisateurDto> creerUtilisateur(@RequestBody UtilisateurDto utilisateurDto) {
+    public ResponseEntity<UtilisateurDto> creerUtilisateur(@Valid @RequestBody UtilisateurDto utilisateurDto) {
         try {
             UtilisateurDto sauvegardePersonne = utilisateurService.creerPersonne(utilisateurDto);
 

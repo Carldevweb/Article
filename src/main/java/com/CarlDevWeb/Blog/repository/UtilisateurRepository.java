@@ -15,4 +15,6 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
     Optional<Utilisateur> findByEmailIgnoreCase(String email);
 
     boolean existsByEmail(String email);
+
+    Optional<Utilisateur> findByToken(String token);
 }

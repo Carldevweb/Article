@@ -17,14 +17,11 @@ public class Utilisateur {
     private String prenomUtilisateur;
     private String motDePasse;
     private String email;
+    private String token;
 
     @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("utilisateur")
     private List<Favori> favori = new ArrayList<>();
-
-    public List<Favori> getFavori() {
-        return favori;
-    }
 
     public void setFavori(List<Favori> favori) {
         this.favori = favori;
@@ -68,6 +65,18 @@ public class Utilisateur {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public List<Favori> getFavori() {
+        return favori;
     }
 
     @Override
