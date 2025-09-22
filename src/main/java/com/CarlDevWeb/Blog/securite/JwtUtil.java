@@ -46,15 +46,23 @@ public class JwtUtil {
     }
 
     public String generateToken(UserDetails userDetails) {
+        return buildToken(userDetails.getUsername());
+    }
+
+    /** Génère un token à partir d'un simple identifiant (email) */
+    public String generateToken(String subject) {
+        return buildToken(subject);
+    }
+    private String buildToken(String subject) {
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
+                .setSubject(subject)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 heure
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String extractUsername(String token) {
+    public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -63,16 +71,31 @@ public class JwtUtil {
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-        return claimsResolver.apply(claims);
+        try {
+            final Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claimsResolver.apply(claims);
+        } catch (Exception e) {
+            System.out.println("Erreur lors de l'extraction des claims du token : " + e.getMessage());
+            throw e;
+        }
+    }
+
+    public boolean estTokenExpire(String token) {
+        try {
+            Date expiration = extractExpiration(token);
+            return expiration.before(new Date());
+        } catch (Exception e) {
+            System.out.println("Erreur lors de la vérification du token expiré : " + e.getMessage());
+            return true;
+        }
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
+        final String username = extractEmail(token);
         final Date expiration = extractExpiration(token);
 
         if (expiration.before(new Date())) {
@@ -83,4 +106,9 @@ public class JwtUtil {
         return username.equals(userDetails.getUsername());
     }
 
+    public String renouvelerToken(String ancienToken) {
+        String tokenSansPrefixe = ancienToken.replace("Bearer ", "");
+        String email = extractEmail(tokenSansPrefixe);
+        return generateToken(email);
+    }
 }

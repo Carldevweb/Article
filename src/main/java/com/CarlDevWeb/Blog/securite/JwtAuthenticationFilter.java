@@ -1,5 +1,7 @@
 package com.CarlDevWeb.Blog.securite;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Set;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -20,9 +23,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
+    private static final Set<String> WHITELIST_PREFIXES = Set.of(
+            "/authentification/",  // login, refresh, etc.
+            "/error"               // page d'erreur
+    );
+
     public JwtAuthenticationFilter(JwtUtil jwtUtil, UtilisateurDetailsServiceImpl userDetailsService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+    }
+
+    private boolean isWhitelisted(HttpServletRequest request) {
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) return true;
+        String path = request.getRequestURI();
+        for (String prefix : WHITELIST_PREFIXES) {
+            if (path.startsWith(prefix)) return true;
+        }
+        return false;
     }
 
     @Override
@@ -30,29 +47,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain chain)
             throws ServletException, IOException {
-        String authorizationHeader = request.getHeader("Authorization");
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            String token = authorizationHeader.substring(7);
-            String username = jwtUtil.extractUsername(token);
+        // Laisse passer sans toucher au token
+        if (isWhitelisted(request)) {
+            chain.doFilter(request, response);
+            return;
+        }
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                try {
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        String auth = request.getHeader("Authorization");
+        if (auth != null && auth.startsWith("Bearer ")) {
+            String token = auth.substring(7);
+
+            try {
+                String email = jwtUtil.extractEmail(token); // <-- maintenant DANS le try
+                if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
                     if (jwtUtil.validateToken(token, userDetails)) {
                         UsernamePasswordAuthenticationToken authentication =
-                                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails, null, userDetails.getAuthorities());
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     } else {
-                        logger.warn("❌ Token invalide pour l'utilisateur: " + username);
+                        logger.warn("❌ Token invalide pour l'utilisateur: " + email);
                     }
-                } catch (Exception e) {
-                    logger.error("❌ Erreur lors de l'extraction ou de la validation du token", e);
                 }
+            } catch (ExpiredJwtException e) {
+                // Token expiré : on n’authentifie pas, on laisse la requête continuer.
+                // Si l’endpoint est protégé, il finira en 401 via Security.
+                logger.warn("⏰ Token expiré", e);
+            } catch (JwtException e) {
+                // Token mal formé / signature invalide / etc.
+                logger.warn("❌ Token JWT invalide", e);
+            } catch (Exception e) {
+                logger.error("❌ Erreur lors du traitement du token", e);
             }
         }
 
-        chain.doFilter(request, response); // ✅ Assure que le filtrage continue
+        chain.doFilter(request, response);
     }
 }

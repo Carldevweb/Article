@@ -1,5 +1,6 @@
 package com.CarlDevWeb.Blog.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -19,7 +20,9 @@ public class Article {
     private String titre;
     private String contenu;
     private String auteur;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime dateCreation;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private Date miseAJour;
 
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -33,6 +36,24 @@ public class Article {
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Media> media = new ArrayList<>();
+
+
+    @ManyToMany
+    @JoinTable(
+            name = "article_categorie",
+            joinColumns = @JoinColumn(name = "article_id"),
+            inverseJoinColumns = @JoinColumn(name = "categorie_id")
+    )
+    @JsonManagedReference
+    private List<Categorie> categories = new ArrayList<>();
+
+    public List<Categorie> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<Categorie> categories) {
+        this.categories = categories;
+    }
 
     public List<Media> getMedia() {
         return media;
@@ -120,16 +141,4 @@ public class Article {
         this.titre = titre;
     }
 
-    @Override
-    public String toString() {
-        return "Article{" +
-                "id=" + id +
-                ", titre='" + titre + '\'' +
-                ", contenu='" + contenu + '\'' +
-                ", auteur='" + auteur + '\'' +
-                ", dateCreation=" + dateCreation +
-                ", miseAJour=" + miseAJour +
-                ", commentaires=" + commentaires +
-                '}';
-    }
 }

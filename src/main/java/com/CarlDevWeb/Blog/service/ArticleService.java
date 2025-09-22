@@ -9,7 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ArticleService {
@@ -46,7 +48,12 @@ public class ArticleService {
 
     public Optional<Article> findById(Long id) {
         return articleRepository.findById(id);
+    }
 
+    public List<ArticleDto> findAll() {
+        return articleRepository.findAll().stream()
+                .map(articleMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     public void deleteById(Long id) {
@@ -61,5 +68,17 @@ public class ArticleService {
                 .stream()
                 .findFirst()
                 .map(articleMapper::toDto);
+    }
+
+    public List<ArticleDto> articleParCategories(List<String> categories) {
+        if (categories == null || categories.isEmpty()) {
+            throw new IllegalArgumentException("La liste des catégories ne peut pas être vide.");
+        }
+
+        List<Article> articles = articleRepository.findByCategoriesIn(categories);
+
+        return articles.stream()
+                .map(articleMapper::toDto)
+                .collect(Collectors.toList());
     }
 }

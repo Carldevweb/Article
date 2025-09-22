@@ -3,7 +3,6 @@ package com.CarlDevWeb.Blog.service;
 import com.CarlDevWeb.Blog.dto.*;
 import com.CarlDevWeb.Blog.entity.Utilisateur;
 import com.CarlDevWeb.Blog.repository.UtilisateurRepository;
-import com.CarlDevWeb.Blog.securite.JwtTokenProvider;
 import com.CarlDevWeb.Blog.securite.JwtUtil;
 import com.CarlDevWeb.Blog.securite.UtilisateurDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +30,6 @@ public class AuthentificationService {
     @Autowired
     AuthenticationManager authenticationManager;
 
-    @Autowired
-    JwtTokenProvider jwtTokenProvider;
 
     @Autowired
     private UtilisateurDetailsServiceImpl userDetailsService;
@@ -82,7 +79,7 @@ public class AuthentificationService {
 
     }
 
-    public ReinitialiserEmailReponseDto reinitialiserEmail (ReinitialiserEmailRequeteDto requete) {
+    public ReinitialiserEmailReponseDto reinitialiserEmail(ReinitialiserEmailRequeteDto requete) {
 
         Utilisateur utilisateur = utilisateurRepository.findByEmailIgnoreCase(requete.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("L'email est invalide ou n'existe pas"));
@@ -95,7 +92,7 @@ public class AuthentificationService {
     }
 
     public boolean reinitialiserMdpViaToken(String token, String nouveauMotDePasse) {
-        String email = jwtTokenProvider.getEmailFromToken(token);
+        String email = jwtUtil.extractEmail(token);
         if (email != null) {
             Optional<Utilisateur> utilisateurOpt = utilisateurRepository.findByEmailIgnoreCase(email);
             if (utilisateurOpt.isPresent()) {
@@ -106,5 +103,23 @@ public class AuthentificationService {
             }
         }
         return false;
+    }
+
+    public String renouvelerToken(String ancienToken) {
+        try {
+            // 1) On enlève le préfixe
+            String tokenSansPrefixe = ancienToken.replace("Bearer ", "");
+            // 2) On récupère l'email depuis le token
+            String email = jwtUtil.extractEmail(tokenSansPrefixe);
+
+            // 3) On recharge les infos utilisateur (pour valider le rôle, etc.)
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+            // 4) On génère un nouveau token à partir de l'email
+            return jwtUtil.generateToken(email);
+        } catch (Exception e) {
+            System.out.println("Erreur lors du renouvellement du token : " + e.getMessage());
+            throw new IllegalArgumentException("Le token ne peut pas être renouvelé");
+        }
     }
 }
