@@ -1,6 +1,8 @@
 package com.CarlDevWeb.Blog.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import enums.Role;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -19,7 +21,12 @@ public class Utilisateur {
     private String email;
     private String token;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.EMPLOYEE;
+
     @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     @JsonIgnoreProperties("utilisateur")
     private List<Favori> favori = new ArrayList<>();
 
@@ -79,6 +86,14 @@ public class Utilisateur {
         return favori;
     }
 
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
     @Override
     public String toString() {
         return "Utilisateur{" +
@@ -88,6 +103,9 @@ public class Utilisateur {
                 ", motDePasse='" + motDePasse + '\'' +
                 ", email='" + email + '\'' +
                 ", favori=" + favori +
+                ", role=" + role +
                 '}';
     }
+
+
 }

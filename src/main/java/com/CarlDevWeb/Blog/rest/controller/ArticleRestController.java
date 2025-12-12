@@ -6,6 +6,7 @@ import com.CarlDevWeb.Blog.service.ArticleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class ArticleRestController {
     @Autowired
     private ArticleMapper articleMapper;
 
+    @PreAuthorize("hasRole('ADMIN') or hasRole('EMPLOYEE')")
     @PostMapping
     public ResponseEntity<ArticleDto> creerArticle(@RequestBody ArticleDto articleDto) {
         ArticleDto sauvegarderArticle = articleService.creerArticle(articleDto);
@@ -28,27 +30,31 @@ public class ArticleRestController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ArticleDto> findById(@PathVariable ArticleDto articleDto) {
-        ArticleDto creerArticle = articleService.creerArticle(articleDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(creerArticle);
+    public ResponseEntity<ArticleDto> findById(@PathVariable("id") Long id) {
+        return articleService.findById(id)
+                .map(articleMapper::toDto)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping("titre/{titre}")
-    public ResponseEntity<List<ArticleDto>> getByTitre(@PathVariable("titre") String titre) {
-        Optional<ArticleDto> articleDto = articleService.findByTitreContainingIgnoreCase(titre);
-        if (articleDto.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        return ResponseEntity.status(HttpStatus.OK).build();
-
-    }
-
-    @GetMapping("/listes")
+    @GetMapping
     public ResponseEntity<List<ArticleDto>> getAll() {
         List<ArticleDto> dtos = articleService.findAll();
         return ResponseEntity.ok(dtos);
     }
 
+
+
+    @GetMapping("/titre/{titre}")
+    public ResponseEntity<ArticleDto> getByTitre(@PathVariable("titre") String titre) {
+        return articleService.findByTitreContainingIgnoreCase(titre) // Optional<ArticleDto>
+                .map(ResponseEntity::ok)                             // renvoie 200 + ArticleDto
+                .orElseGet(() -> ResponseEntity.notFound().build()); // renvoie 404
+    }
+
+
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('EMPLOYEE')")
     @PutMapping("/{id}")
     public ResponseEntity<ArticleDto> mettreAJour(@PathVariable("id") Long id,
                                                   @RequestBody ArticleDto articleDto) {
@@ -65,6 +71,8 @@ public class ArticleRestController {
         }
     }
 
+
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> supprimerParId(@PathVariable("id") Long id) {
         articleService.deleteById(id);

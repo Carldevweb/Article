@@ -17,7 +17,7 @@ public class Categorie {
     private String nomCategorie;
 
     @ManyToMany(mappedBy = "categories")
-    @JsonBackReference // Permet de gérer la sérialisation inverse pour éviter les boucles infinies
+    @JsonBackReference
     private List<Article> articles = new ArrayList<>();
 
 }
