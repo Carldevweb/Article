@@ -1,41 +1,29 @@
 # Article API (Spring Boot)
 
-API backend du projet **Article** : authentification JWT, gestion des utilisateurs (admin), articles, catégories, médias (upload), favoris, reset mot de passe.
+Backend du projet **Article** : JWT, users/admin, articles, catégories, médias (upload), favoris, reset mot de passe.
 
 ## Stack
-- Java 17+ (ou 21)
-- Spring Boot
+- Java 17
+- Spring Boot 3.3.x
 - Spring Security (JWT)
 - Spring Data JPA / Hibernate
 - PostgreSQL
 - Maven
 
 ## Prérequis
-- Java installé (`java -version`)
-- Maven (`mvn -v`) ou Maven Wrapper
-- PostgreSQL (base + user)
-- Variables d’environnement (voir ci-dessous)
+- Java 17
+- PostgreSQL (base `article`)
+- Maven
 
 ## Configuration
 
-### Base de données
-Dans `src/main/resources/application.properties` :
+### Variables d’environnement
+Le projet utilise des variables d’environnement (aucun secret en dur) :
 
-- `spring.datasource.url=jdbc:postgresql://localhost:5432/article`
-- `spring.datasource.username=postgres`
-- `spring.datasource.password=${DB_PASSWORD}`
-
-Crée une base `article` (ou adapte l’URL).
-
-### Variables d’environnement requises
-L’application utilise des variables d’environnement, **aucun secret n’est commit**.
-
-À définir dans ton OS / IDE :
-
-- `DB_PASSWORD` : mot de passe PostgreSQL
-- `JWT_SECRET` : clé secrète JWT (longue, aléatoire)
-- `GMAIL_USERNAME` : email Gmail pour l’envoi
-- `GMAIL_APP_PASSWORD` : mot de passe d’application Gmail (pas le mot de passe du compte)
+- `DB_PASSWORD`
+- `JWT_SECRET`
+- `GMAIL_USERNAME`
+- `GMAIL_APP_PASSWORD`
 
 Exemple (PowerShell) :
 ```powershell
