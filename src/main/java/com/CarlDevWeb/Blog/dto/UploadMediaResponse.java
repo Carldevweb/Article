@@ -7,11 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
-public class MediaDto {
-
-    private Long id;
+public class UploadMediaResponse {
+    private String filename;
     private String url;
-    private String type;
-    private Long articleId;
 }

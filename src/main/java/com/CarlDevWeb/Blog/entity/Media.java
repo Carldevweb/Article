@@ -2,62 +2,31 @@ package com.CarlDevWeb.Blog.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "media")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString(exclude = "article") // évite boucle infinie
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Media {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
+
+    @Column(nullable = false)
     private String url;
+
     private String type;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "article_id")
+    @JoinColumn(name = "article_id", nullable = false)
     @JsonBackReference
     private Article article;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public Article getArticle() {
-        return article;
-    }
-
-    public void setArticle(Article article) {
-        this.article = article;
-    }
-
-    @Override
-    public String toString() {
-        return "Media{" +
-                "id=" + id +
-                ", url='" + url + '\'' +
-                ", type='" + type + '\'' +
-                ", article=" + article +
-                '}';
-    }
 }
-

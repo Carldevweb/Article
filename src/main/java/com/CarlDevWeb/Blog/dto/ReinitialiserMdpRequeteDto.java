@@ -5,10 +5,7 @@ import lombok.Data;
 @Data
 public class ReinitialiserMdpRequeteDto {
 
-    private String tokenTemporaire;
+    private String token;
     private String nouveauMotDePasse;
 
-    public String getToken() {
-        return tokenTemporaire;
-    }
 }

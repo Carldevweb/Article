@@ -15,18 +15,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Set;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
-
-    private static final Set<String> WHITELIST_PREFIXES = Set.of(
-            "/authentification/",  // login, refresh, etc.
-            "/error"               // page d'erreur
-    );
 
     public JwtAuthenticationFilter(JwtUtil jwtUtil, UtilisateurDetailsServiceImpl userDetailsService) {
         this.jwtUtil = jwtUtil;
@@ -35,11 +29,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean isWhitelisted(HttpServletRequest request) {
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) return true;
+
         String path = request.getRequestURI();
-        for (String prefix : WHITELIST_PREFIXES) {
-            if (path.startsWith(prefix)) return true;
-        }
-        return false;
+
+        // Routes publiques (doivent matcher SecuriteConfig)
+        return path.equals("/authentification/connexion")
+                || path.equals("/authentification/inscription")
+                || path.equals("/authentification/renouveler-token")
+                || path.equals("/authentification/mot-de-passe-oublie")
+                || path.equals("/authentification/reinitialiser-mot-de-passe")
+                || path.equals("/authentification/reinitialiser-email")
+                || path.equals("/error");
     }
 
     @Override
@@ -48,7 +48,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain chain)
             throws ServletException, IOException {
 
-        // Laisse passer sans toucher au token
         if (isWhitelisted(request)) {
             chain.doFilter(request, response);
             return;
@@ -59,7 +58,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = auth.substring(7);
 
             try {
-                String email = jwtUtil.extractEmail(token); // <-- maintenant DANS le try
+                String email = jwtUtil.extractEmail(token);
+
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
@@ -68,19 +68,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 new UsernamePasswordAuthenticationToken(
                                         userDetails, null, userDetails.getAuthorities());
                         SecurityContextHolder.getContext().setAuthentication(authentication);
-                    } else {
-                        logger.warn("❌ Token invalide pour l'utilisateur: " + email);
                     }
                 }
+
             } catch (ExpiredJwtException e) {
-                // Token expiré : on n’authentifie pas, on laisse la requête continuer.
-                // Si l’endpoint est protégé, il finira en 401 via Security.
-                logger.warn("⏰ Token expiré", e);
+                logger.warn("Token expiré", e);
             } catch (JwtException e) {
-                // Token mal formé / signature invalide / etc.
-                logger.warn("❌ Token JWT invalide", e);
+                logger.warn("Token JWT invalide", e);
             } catch (Exception e) {
-                logger.error("❌ Erreur lors du traitement du token", e);
+                logger.error("Erreur lors du traitement du token", e);
             }
         }
 

@@ -2,7 +2,7 @@ package com.CarlDevWeb.Blog.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import enums.Role;
+import com.CarlDevWeb.Blog.enums.Role;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import java.util.List;
 public class Utilisateur {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String nomUtilisateur;
     private String prenomUtilisateur;
@@ -23,7 +23,7 @@ public class Utilisateur {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role = Role.EMPLOYEE;
+    private Role role = Role.USER;
 
     @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore

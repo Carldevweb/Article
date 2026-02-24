@@ -1,39 +1,33 @@
 package com.CarlDevWeb.Blog.mapper;
 
-import com.CarlDevWeb.Blog.dto.UtilisateurDto;
+import com.CarlDevWeb.Blog.dto.ProfilDto;
 import com.CarlDevWeb.Blog.entity.Utilisateur;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UtilisateurMapper {
 
-    public UtilisateurDto toDto(Utilisateur utilisateur) {
+    public ProfilDto toProfilDto(Utilisateur utilisateur) {
         if (utilisateur == null) {
             return null;
         }
 
-        UtilisateurDto utilisateurDto = new UtilisateurDto();
-
-        utilisateurDto.setId(utilisateur.getId());
-        utilisateurDto.setNomUtilisateur(utilisateur.getNomUtilisateur());
-        utilisateurDto.setPrenomUtilisateur(utilisateur.getPrenomUtilisateur());
-        utilisateurDto.setEmail(utilisateur.getEmail());
-
-        return utilisateurDto;
+        return new ProfilDto(
+                utilisateur.getId(),
+                utilisateur.getEmail(),
+                utilisateur.getNomUtilisateur(),
+                utilisateur.getPrenomUtilisateur(),
+                utilisateur.getRole()
+        );
     }
 
-    public Utilisateur toEntity(UtilisateurDto utilisateurDto) {
-        if (utilisateurDto == null) {
-            return null;
+    public void updateEntityFromProfilDto(Utilisateur utilisateur, ProfilDto dto) {
+        if (utilisateur == null || dto == null) {
+            return;
         }
 
-        Utilisateur utilisateurEntity = new Utilisateur();
-
-        utilisateurEntity.setId(utilisateurDto.getId());
-        utilisateurEntity.setPrenomUtilisateur(utilisateurDto.getPrenomUtilisateur());
-        utilisateurEntity.setNomUtilisateur(utilisateurDto.getNomUtilisateur());
-        utilisateurEntity.setEmail(utilisateurDto.getEmail());
-
-        return utilisateurEntity;
+        utilisateur.setNomUtilisateur(dto.getNomUtilisateur());
+        utilisateur.setPrenomUtilisateur(dto.getPrenomUtilisateur());
+        utilisateur.setEmail(dto.getEmail());
     }
 }

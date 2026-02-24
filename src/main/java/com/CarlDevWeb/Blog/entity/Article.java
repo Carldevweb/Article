@@ -4,38 +4,58 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "article")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString(exclude = {"commentaires", "favori", "media", "categories"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Article {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
+
     private String titre;
+
+    @Column(columnDefinition = "TEXT")
     private String contenu;
+
     private String auteur;
+
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime dateCreation;
+
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @Temporal(TemporalType.TIMESTAMP)
     private Date miseAJour;
 
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    private List<Commentaire> commentaires = new ArrayList<>();
+    @Builder.Default
+    private Set<Commentaire> commentaires = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("article")
-    private List<Favori> favori = new ArrayList<>();
+    @Builder.Default
+    private Set<Favori> favori = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id ASC")
     @JsonManagedReference
-    private List<Media> media = new ArrayList<>();
+    @Builder.Default
+    private Set<Media> media = new LinkedHashSet<>();
 
 
     @ManyToMany
@@ -45,44 +65,10 @@ public class Article {
             inverseJoinColumns = @JoinColumn(name = "categorie_id")
     )
     @JsonManagedReference
-    private List<Categorie> categories = new ArrayList<>();
+    @Builder.Default
+    private Set<Categorie> categories = new LinkedHashSet<>();
 
-    public List<Categorie> getCategories() {
-        return categories;
-    }
-
-    public void setCategories(List<Categorie> categories) {
-        this.categories = categories;
-    }
-
-    public List<Media> getMedia() {
-        return media;
-    }
-
-    public void setMedia(List<Media> media) {
-        this.media = media;
-    }
-
-    public List<Favori> getFavori() {
-        return favori;
-    }
-
-    public void setFavori(List<Favori> favori) {
-        this.favori = favori;
-    }
-
-    public int getFavoriNb() {
-        return favori.size();
-    }
-
-    public List<Commentaire> getCommentaires() {
-        return commentaires;
-    }
-
-    public void setCommentaires(List<Commentaire> commentaires) {
-        this.commentaires = commentaires;
-    }
-
+    // Helpers
     public void ajouterCommentaire(Commentaire commentaire) {
         commentaires.add(commentaire);
         commentaire.setArticle(this);
@@ -90,55 +76,24 @@ public class Article {
 
     public void retirerCommentaire(Commentaire commentaire) {
         commentaires.remove(commentaire);
-        commentaire.setArticle(this);
+        commentaire.setArticle(null);
     }
 
-    public Long getId() {
-        return id;
+    public void ajouterMedia(Media m) {
+        media.add(m);
+        m.setArticle(this);
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void retirerMedia(Media m) {
+        media.remove(m);
+        m.setArticle(null);
     }
 
-    public Date getMiseAJour() {
-        return miseAJour;
+    public void ajouterCategorie(Categorie c) {
+        categories.add(c);
     }
 
-    public void setMiseAJour(Date miseAJour) {
-        this.miseAJour = miseAJour;
+    public void retirerCategorie(Categorie c) {
+        categories.remove(c);
     }
-
-    public LocalDateTime getDateCreation() {
-        return dateCreation;
-    }
-
-    public void setDateCreation(LocalDateTime dateCreation) {
-        this.dateCreation = dateCreation;
-    }
-
-    public String getAuteur() {
-        return auteur;
-    }
-
-    public void setAuteur(String auteur) {
-        this.auteur = auteur;
-    }
-
-    public String getContenu() {
-        return contenu;
-    }
-
-    public void setContenu(String contenu) {
-        this.contenu = contenu;
-    }
-
-    public String getTitre() {
-        return titre;
-    }
-
-    public void setTitre(String titre) {
-        this.titre = titre;
-    }
-
 }

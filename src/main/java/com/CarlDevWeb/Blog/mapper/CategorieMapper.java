@@ -36,7 +36,9 @@ public class CategorieMapper {
         CategorieDto categorieDto = new CategorieDto();
         categorieDto.setId(categorie.getId());
         categorieDto.setNomCategorie(categorie.getNomCategorie());
+        categorieDto.setImageUrl(categorie.getImageUrl());
 
+        // Tu ne remplis pas articles ici (vu que tu gères via endpoint /{id}/articles)
         return categorieDto;
     }
 
@@ -48,6 +50,7 @@ public class CategorieMapper {
         Categorie categorieEntity = new Categorie();
         categorieEntity.setId(categorieDto.getId());
         categorieEntity.setNomCategorie(categorieDto.getNomCategorie());
+        categorieEntity.setImageUrl(categorieDto.getImageUrl());
 
         return categorieEntity;
     }

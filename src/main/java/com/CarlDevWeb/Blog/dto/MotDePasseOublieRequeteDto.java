@@ -5,7 +5,6 @@ import lombok.Data;
 @Data
 public class MotDePasseOublieRequeteDto {
 
-    private String tokenTemporaire;
-    private String nouveauMotDePasse;
+    private String email;
 
 }

@@ -1,14 +1,22 @@
 package com.CarlDevWeb.Blog.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class InscriptionRequeteDto {
 
-    private Long id;
+    @NotBlank
     private String nomUtilisateur;
-    private String prenomUtilisateur;
-    private String email;
-    private String motDePasse;
 
+    @NotBlank
+    private String prenomUtilisateur;
+
+    @NotBlank
+    @Email
+    private String email;
+
+    @NotBlank
+    private String motDePasse;
 }

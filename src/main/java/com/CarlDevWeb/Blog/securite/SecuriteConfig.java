@@ -40,13 +40,28 @@ public class SecuriteConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+
+                        // ✅ IMPORTANT : rendre les images publiques
+                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+
                         .requestMatchers(HttpMethod.GET, "/articles/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
+
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/authentification/**").permitAll()
-                        .requestMatchers("/mot-de-passe-oublie/**").permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/authentification/connexion").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/authentification/inscription").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/authentification/renouveler-token").permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/authentification/mot-de-passe-oublie").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/authentification/reinitialiser-mot-de-passe").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/authentification/reinitialiser-email").permitAll()
+
                         .requestMatchers("/error").permitAll()
-                        // .requestMatchers("/articles/**").permitAll() // <- dé-commente si ces routes sont publiques
+
+                        // ✅ ADMIN : verrouillage backend
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex.authenticationEntryPoint((req, res, e) -> {
@@ -67,9 +82,10 @@ public class SecuriteConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
+
         config.setAllowedOrigins(List.of("http://localhost:4200"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -82,4 +98,3 @@ public class SecuriteConfig {
         return new BCryptPasswordEncoder();
     }
 }
-

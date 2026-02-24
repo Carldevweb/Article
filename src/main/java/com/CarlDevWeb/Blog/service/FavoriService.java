@@ -8,53 +8,87 @@ import com.CarlDevWeb.Blog.mapper.FavoriMapper;
 import com.CarlDevWeb.Blog.repository.ArticleRepository;
 import com.CarlDevWeb.Blog.repository.FavoriRepository;
 import com.CarlDevWeb.Blog.repository.UtilisateurRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
+
 public class FavoriService {
 
     @Autowired
     FavoriRepository favoriRepository;
-
     @Autowired
     FavoriMapper favoriMapper;
-
     @Autowired
     ArticleRepository articleRepository;
-
     @Autowired
     UtilisateurRepository utilisateurRepository;
 
     @Transactional
-    public FavoriDto ajouterFavori(FavoriDto favoriDto) {
-        Article article = articleRepository.findById(favoriDto.getArticle().getId())
-                .orElseThrow(() -> new IllegalArgumentException("L'article n'existe pas"));
+    public FavoriDto ajouterFavori(Long articleId, String email) {
 
-        Utilisateur utilisateur = utilisateurRepository.findById(favoriDto.getUtilisateur().getId())
-                .orElseThrow(() -> new IllegalArgumentException("L'utilisateur n'existe pas"));
-
-        Optional<Favori> favoriExistant = favoriRepository.findByUtilisateurAndArticle(utilisateur, article);
-        if (favoriExistant.isPresent()) {
-            throw new IllegalArgumentException("Ce favori existe déjà");
+        if (articleId == null) {
+            throw new IllegalArgumentException("articleId est obligatoire");
         }
 
-        Favori favori = new Favori();
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new IllegalArgumentException("L'article n'existe pas"));
 
-        favori.setDateDeCreation(favoriDto.getDateDeCreation());
+        Utilisateur utilisateur = utilisateurRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur inconnu"));
+
+        favoriRepository.findByUtilisateurAndArticle(utilisateur, article)
+                .ifPresent(f -> {
+                    throw new IllegalArgumentException("Ce favori existe déjà");
+                });
+
+        Favori favori = new Favori();
         favori.setArticle(article);
         favori.setUtilisateur(utilisateur);
+        favori.setDateDeCreation(LocalDateTime.now());
 
-        Favori favoriSauvegarde = favoriRepository.save(favori);
-
-        return favoriMapper.toDto(favoriSauvegarde);
+        return favoriMapper.toDto(favoriRepository.save(favori));
     }
 
-    public void supprimerParId(Long id) {
-        this.favoriRepository.deleteById(id);
+    @Transactional(readOnly = true)
+    public List<FavoriDto> findAllByEmail(String email) {
+        Utilisateur utilisateur = utilisateurRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur inconnu"));
+
+        return favoriRepository.findByUtilisateur(utilisateur)
+                .stream()
+                .map(favoriMapper::toDto)
+                .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<FavoriDto> findAll() {
+        return favoriRepository.findAll()
+                .stream()
+                .map(favoriMapper::toDto)
+                .toList();
+    }
+
+    @Transactional
+    public void supprimerParId(Long id, String email) {
+        if (id == null) throw new IllegalArgumentException("id est obligatoire");
+
+        Utilisateur utilisateur = utilisateurRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur inconnu"));
+
+        Favori favori = favoriRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Favori introuvable"));
+
+        if (!favori.getUtilisateur().getId().equals(utilisateur.getId())) {
+            throw new IllegalArgumentException("Accès interdit");
+        }
+
+        favoriRepository.delete(favori);
+    }
 }

@@ -1,10 +1,15 @@
 package com.CarlDevWeb.Blog.service;
 
 import com.CarlDevWeb.Blog.dto.*;
+import com.CarlDevWeb.Blog.entity.PasswordResetToken;
 import com.CarlDevWeb.Blog.entity.Utilisateur;
+import com.CarlDevWeb.Blog.enums.Role;
+import com.CarlDevWeb.Blog.repository.PasswordResetTokenRepository;
 import com.CarlDevWeb.Blog.repository.UtilisateurRepository;
 import com.CarlDevWeb.Blog.securite.JwtUtil;
 import com.CarlDevWeb.Blog.securite.UtilisateurDetailsServiceImpl;
+import io.jsonwebtoken.JwtException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -12,8 +17,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 public class AuthentificationService {
@@ -25,101 +30,131 @@ public class AuthentificationService {
     PasswordEncoder passwordEncoder;
 
     @Autowired
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Autowired
     JwtUtil jwtUtil;
 
     @Autowired
     AuthenticationManager authenticationManager;
 
-
     @Autowired
     private UtilisateurDetailsServiceImpl userDetailsService;
 
-    public AuthentificationReponseDto connexion(AuthentificationRequeteDto requete) {
+    @Autowired
+    private EmailService emailService;
 
+    public AuthentificationReponseDto connexion(AuthentificationRequeteDto requete) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(requete.getEmail(), requete.getMotDePasse())
         );
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(requete.getEmail());
-
         String token = jwtUtil.generateToken(userDetails);
 
-        // Retour de la réponse avec le token
         return new AuthentificationReponseDto(token);
     }
 
-    public AuthentificationReponseDto inscription(InscriptionRequeteDto requete) {
-        if (utilisateurRepository.existsByEmail(requete.getEmail())) {
+    @Transactional
+    public InscriptionReponseDto inscription(InscriptionRequeteDto requete) {
+
+        String email = requete.getEmail() == null ? null : requete.getEmail().trim();
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email invalide");
+        }
+
+        if (utilisateurRepository.existsByEmailIgnoreCase(email)) {
             throw new RuntimeException("L'email est déjà utilisé.");
         }
 
         Utilisateur utilisateur = new Utilisateur();
-        utilisateur.setNomUtilisateur(requete.getNomUtilisateur());
-        utilisateur.setEmail(requete.getEmail());
+        utilisateur.setNomUtilisateur(requete.getNomUtilisateur() != null ? requete.getNomUtilisateur().trim() : null);
+        utilisateur.setPrenomUtilisateur(requete.getPrenomUtilisateur() != null ? requete.getPrenomUtilisateur().trim() : null);
+        utilisateur.setEmail(email);
         utilisateur.setMotDePasse(passwordEncoder.encode(requete.getMotDePasse()));
+        utilisateur.setRole(Role.USER);
 
-        utilisateurRepository.save(utilisateur);
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(requete.getEmail());
-        String token = jwtUtil.generateToken(userDetails);
+        Utilisateur saved = utilisateurRepository.save(utilisateur);
 
-        return new AuthentificationReponseDto(token);
+        InscriptionReponseDto reponse = new InscriptionReponseDto();
+        reponse.setId(saved.getId());
+        reponse.setEmail(saved.getEmail());
+        reponse.setNomUtilisateur(saved.getNomUtilisateur());
+        reponse.setRole(saved.getRole().name());
+
+        return reponse;
+    }
+
+    public MotDePasseOublieReponseDto demanderMotDePasseOublie(String email) {
+
+        if (email == null || email.isBlank()) {
+            return new MotDePasseOublieReponseDto(false, "Email invalide.");
+        }
+
+        utilisateurRepository.findByEmailIgnoreCase(email).ifPresent(utilisateur -> {
+
+            passwordResetTokenRepository.findFirstByUtilisateurAndUsedAtIsNullOrderByExpiresAtDesc(utilisateur)
+                    .ifPresent(existing -> {
+                        existing.setUsedAt(LocalDateTime.now());
+                        passwordResetTokenRepository.save(existing);
+                    });
+
+            String resetToken = UUID.randomUUID().toString();
+
+            PasswordResetToken prt = new PasswordResetToken();
+            prt.setToken(resetToken);
+            prt.setUtilisateur(utilisateur);
+            prt.setExpiresAt(LocalDateTime.now().plusMinutes(15));
+            prt.setUsedAt(null);
+
+            passwordResetTokenRepository.save(prt);
+
+            emailService.envoyerResetPassword(utilisateur.getEmail(), resetToken);
+        });
+
+        return new MotDePasseOublieReponseDto(true, "Si l'email existe, un message a été envoyé.");
     }
 
     public ReinitialiserMdpReponseDto reinitialiserMdp(ReinitialiserMdpRequeteDto requete) {
 
-        Utilisateur utilisateur = utilisateurRepository.findByToken(requete.getToken())
-                .orElseThrow(() -> new IllegalArgumentException("Token invalide ou expiré"));
+        PasswordResetToken prt = passwordResetTokenRepository.findByToken(requete.getToken())
+                .orElseThrow(() -> new IllegalArgumentException("Token invalide"));
 
+        if (prt.isUsed()) {
+            throw new IllegalArgumentException("Token déjà utilisé");
+        }
+
+        if (prt.isExpired()) {
+            throw new IllegalArgumentException("Token expiré");
+        }
+
+        Utilisateur utilisateur = prt.getUtilisateur();
         utilisateur.setMotDePasse(passwordEncoder.encode(requete.getNouveauMotDePasse()));
-
         utilisateurRepository.save(utilisateur);
 
-        return new ReinitialiserMdpReponseDto(true, "Le mot de passe a été changé avec succès");
+        prt.setUsedAt(LocalDateTime.now());
+        passwordResetTokenRepository.save(prt);
 
+        return new ReinitialiserMdpReponseDto(true, "Le mot de passe a été changé avec succès");
     }
 
     public ReinitialiserEmailReponseDto reinitialiserEmail(ReinitialiserEmailRequeteDto requete) {
-
         Utilisateur utilisateur = utilisateurRepository.findByEmailIgnoreCase(requete.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("L'email est invalide ou n'existe pas"));
 
         utilisateur.setEmail(requete.getEmail());
-
         utilisateurRepository.save(utilisateur);
 
         return new ReinitialiserEmailReponseDto("L'email a été réinitialiser", true);
     }
 
-    public boolean reinitialiserMdpViaToken(String token, String nouveauMotDePasse) {
-        String email = jwtUtil.extractEmail(token);
-        if (email != null) {
-            Optional<Utilisateur> utilisateurOpt = utilisateurRepository.findByEmailIgnoreCase(email);
-            if (utilisateurOpt.isPresent()) {
-                Utilisateur utilisateur = utilisateurOpt.get();
-                utilisateur.setMotDePasse(passwordEncoder.encode(nouveauMotDePasse));
-                utilisateurRepository.save(utilisateur);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public String renouvelerToken(String ancienToken) {
+    public String renouvelerToken(String authorizationHeader) {
         try {
-            // 1) On enlève le préfixe
-            String tokenSansPrefixe = ancienToken.replace("Bearer ", "");
-            // 2) On récupère l'email depuis le token
-            String email = jwtUtil.extractEmail(tokenSansPrefixe);
-
-            // 3) On recharge les infos utilisateur (pour valider le rôle, etc.)
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
-            // 4) On génère un nouveau token à partir de l'email
-            return jwtUtil.generateToken(email);
-        } catch (Exception e) {
-            System.out.println("Erreur lors du renouvellement du token : " + e.getMessage());
+            return jwtUtil.renewFromAuthorizationHeader(authorizationHeader);
+        } catch (JwtException e) {
             throw new IllegalArgumentException("Le token ne peut pas être renouvelé");
         }
     }
+
 }

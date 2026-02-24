@@ -4,16 +4,29 @@ import com.CarlDevWeb.Blog.dto.MediaDto;
 import com.CarlDevWeb.Blog.service.MediaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("medias")
+@RequestMapping("/medias")
 public class MediaRestController {
 
     @Autowired
-    MediaService mediaService;
+    private MediaService mediaService;
 
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, String>> upload(@RequestPart("file") MultipartFile file) {
+        var res = mediaService.uploadImage(file);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "filename", res.getFilename(),
+                "url", res.getUrl()
+        ));
+    }
 
     @PostMapping
     public ResponseEntity<MediaDto> ajouterMedia(@RequestBody MediaDto mediaDto) {
@@ -21,24 +34,26 @@ public class MediaRestController {
         return ResponseEntity.status(HttpStatus.CREATED).body(sauvegarderMedia);
     }
 
+    // ✅ AJOUT : récupérer les médias d’un article
+    @GetMapping("/article/{articleId}")
+    public ResponseEntity<List<MediaDto>> getByArticle(@PathVariable Long articleId) {
+        return ResponseEntity.ok(mediaService.findByArticleId(articleId));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<MediaDto> mettreAJourMedia(@PathVariable("id") Long id,
                                                      @RequestBody MediaDto mediaDto) {
-
-        if (mediaDto == null || id == null) {
-            return ResponseEntity.badRequest().build();
-        }
-
         try {
             MediaDto mediaMisAJour = mediaService.miseAJourMedia(id, mediaDto);
             return ResponseEntity.ok(mediaMisAJour);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 
     @DeleteMapping("/{id}")
-    public void supprimerMedia(@PathVariable("id") Long id) {
-        this.mediaService.supprimerMedia(id);
+    public ResponseEntity<Void> supprimerMedia(@PathVariable("id") Long id) {
+        mediaService.supprimerMedia(id);
+        return ResponseEntity.noContent().build();
     }
 }

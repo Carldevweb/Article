@@ -8,32 +8,13 @@ import org.springframework.stereotype.Component;
 public class MediaMapper {
 
     public MediaDto toDto(Media media) {
-        if (media == null) {
-            return null;
-        }
+        if (media == null) return null;
 
-        MediaDto mediaDto = new MediaDto();
-
-        mediaDto.setId(media.getId());
-        mediaDto.setUrl(media.getUrl());
-        mediaDto.setType(media.getType());
-        mediaDto.setArticle(media.getArticle());
-
-        return mediaDto;
-    }
-
-    public Media toEntity(MediaDto mediaDto) {
-        if (mediaDto == null) {
-            return null;
-        }
-
-        Media media = new Media();
-
-        media.setId(mediaDto.getId());
-        media.setType(mediaDto.getType());
-        media.setUrl(mediaDto.getUrl());
-        media.setArticle(mediaDto.getArticle());
-
-        return media;
+        return MediaDto.builder()
+                .id(media.getId())
+                .url(media.getUrl())
+                .type(media.getType())
+                .articleId(media.getArticle() != null ? media.getArticle().getId() : null)
+                .build();
     }
 }
